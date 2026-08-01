@@ -111,6 +111,11 @@ app.post('/api/verify-razorpay-payment', (req, res) => {
   return res.json({ verified: true, paymentId: razorpay_payment_id });
 });
 
+// ── POST /api/send-order-email ────────────────────────────────────────────────
+// Mirrors: api/send-order-email.js (Vercel serverless function)
+const sendOrderEmailHandler = require('./api/send-order-email');
+app.post('/api/send-order-email', sendOrderEmailHandler);
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`\n[dev] ✓ API server  → http://localhost:${PORT}`);

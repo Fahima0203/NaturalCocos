@@ -156,7 +156,7 @@ export default function Checkout() {
         <div style={{ fontSize: "3.5rem" }}>🛒</div>
         <h2 style={{ color: "#00695c", fontWeight: 700 }}>Your cart is empty</h2>
         <p style={{ color: "#777" }}>Add some products before checking out.</p>
-        <Link to="/products" style={{
+        <Link to="/#featured-products" style={{
           background: "linear-gradient(90deg,#00695c 0%,#43a047 100%)",
           color: "#fff", fontWeight: 700, textDecoration: "none",
           borderRadius: 8, padding: "0.75rem 2rem",
@@ -234,7 +234,7 @@ export default function Checkout() {
       key:         process.env.REACT_APP_RAZORPAY_KEY_ID,
       amount:      rzpOrder.amount,
       currency:    rzpOrder.currency,
-      name:        "Natural Coirs",
+      name:        "Natural Cocos",
       description: `Order — ${totalQty} item${totalQty !== 1 ? "s" : ""}`,
       order_id:    rzpOrder.orderId,
       prefill: {
@@ -286,6 +286,34 @@ export default function Checkout() {
           });
 
           await clearUserCart(currentUser.uid, cartItems);
+
+          // Send confirmation emails (fire-and-forget — don't block navigation)
+          fetch("/api/send-order-email", {
+            method:  "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type:               "order_confirmed",
+              orderId,
+              userEmail:          currentUser.email,
+              items:              cartItems.map((item) => ({
+                id:           item.id,
+                section:      item.section,
+                name:         item.name,
+                price:        item.price,
+                priceValue:   item.priceValue,
+                quantity:     item.quantity,
+                itemSubtotal: item.priceValue * item.quantity,
+              })),
+              shippingAddress:    { ...form },
+              subtotal,
+              shippingCost,
+              totalAmount:        grandTotal,
+              razorpayOrderId:    response.razorpay_order_id,
+              razorpayPaymentId:  response.razorpay_payment_id,
+              createdAt:          new Date().toISOString(),
+            }),
+          }).catch((e) => console.warn("Email send failed:", e));
+
           navigate("/order-success", {
             state:   { orderId, email: currentUser.email },
             replace: true,
@@ -310,10 +338,25 @@ export default function Checkout() {
 
     const rzp = new window.Razorpay(options);
     rzp.on("payment.failed", function (response) {
-      setPlaceError(
-        `Payment failed: ${response.error?.description || "Please try again."}`
-      );
+      const desc = response.error?.description || "Payment failed";
+      setPlaceError(`Payment failed: ${desc}`);
       setPlacing(false);
+
+      // Alert business about the payment issue
+      fetch("/api/send-order-email", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type:              "payment_failed",
+          orderId:           rzpOrder.orderId,
+          userEmail:         currentUser.email,
+          shippingAddress:   { ...form },
+          totalAmount:       grandTotal,
+          razorpayOrderId:   rzpOrder.orderId,
+          razorpayPaymentId: response.error?.metadata?.payment_id || "",
+          errorDescription:  desc,
+        }),
+      }).catch((e) => console.warn("Payment alert email failed:", e));
     });
     rzp.open();
     // placing remains true while popup is active — reset in handler, ondismiss, or payment.failed

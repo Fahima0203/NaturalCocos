@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
@@ -28,6 +28,18 @@ export default function FeaturedProducts() {
   const { addToCart }   = useCart();
   const navigate  = useNavigate();
   const location  = useLocation();
+
+  // If navigated with a hash or state requesting the featured section,
+  // scroll it into view when this component mounts.
+  useEffect(() => {
+    const want = location.hash === "#featured-products" || location?.state?.scrollToFeatured;
+    if (!want) return;
+    const el = document.getElementById("featured-products");
+    if (el) {
+      // timeout ensures layout has settled before scrolling
+      setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+    }
+  }, [location]);
 
   // Track loading / success state per product
   const [busyId,  setBusyId]  = useState(null); // product name (or "buy_<name>")
@@ -75,7 +87,7 @@ export default function FeaturedProducts() {
   }
 
   return (
-    <section style={{
+    <section id="featured-products" style={{
       background: "linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%)",
       padding: "4rem 1rem",
     }}>

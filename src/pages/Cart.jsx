@@ -58,7 +58,7 @@ export default function Cart() {
             <h2 style={{ color: "#555", fontWeight: 600, marginBottom: "0.5rem" }}>Your cart is empty</h2>
             <p style={{ color: "#888", marginBottom: "1.5rem" }}>Browse our products and add items to your cart.</p>
             <Link
-              to="/products"
+              to="/#featured-products"
               style={{
                 background: "linear-gradient(90deg,#00695c 0%,#43a047 100%)",
                 color: "#fff",
@@ -218,7 +218,7 @@ export default function Cart() {
               </button>
 
               <Link
-                to="/products"
+                to="/#featured-products"
                 style={{
                   display: "block",
                   textAlign: "center",

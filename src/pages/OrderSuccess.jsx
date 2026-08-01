@@ -112,8 +112,9 @@ export default function OrderSuccess() {
         </div>
 
         <p style={{ color: "#777", fontSize: "0.9rem", marginBottom: "2rem", lineHeight: 1.6 }}>
-          We will review your order and contact you with payment and shipping
-          details. Keep your order number handy for reference.
+          We have received your details. Our team will now review your order and
+          send processing, dispatch, and delivery updates. Keep your order number
+          handy for reference.
         </p>
 
         <div style={{ display: "flex", gap: "0.9rem", flexWrap: "wrap", justifyContent: "center" }}>
@@ -132,7 +133,7 @@ export default function OrderSuccess() {
             Back to Home
           </Link>
           <Link
-            to="/products"
+            to="/#featured-products"
             style={{
               border: "2px solid #00695c",
               color: "#00695c",
