@@ -5,12 +5,42 @@ import { useCart } from "../context/CartContext";
 import { productSections } from "../data/productSections";
 import { createOrder, clearUserCart } from "../services/orderService";
 
-// ── Shipping cost ─────────────────────────────────────────────────────────────
-const SHIPPING_THRESHOLD = 5000;   // free shipping above this subtotal (₹)
-const SHIPPING_FLAT_RATE  = 250;   // flat rate below threshold (₹)
+// ── Shipping cost (weight slabs) ─────────────────────────────────────────────
+function itemUnitWeightKg(item) {
+  const source = `${item?.name || ""} ${item?.id || ""}`;
+  const kgMatch = source.match(/(\d+(?:\.\d+)?)\s*kg\b/i);
+  if (kgMatch) return Number(kgMatch[1]);
 
-function calcShipping(subtotal) {
-  return subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT_RATE;
+  const gMatch = source.match(/(\d+(?:\.\d+)?)\s*g\b/i);
+  if (gMatch) return Number(gMatch[1]) / 1000;
+
+  return 0;
+}
+
+function cartTotalWeightKg(items) {
+  const total = (items || []).reduce((sum, item) => {
+    const unitKg = itemUnitWeightKg(item);
+    return sum + unitKg * (item.quantity || 0);
+  }, 0);
+
+  return Number(total.toFixed(3));
+}
+
+function calcShippingByWeight(totalWeightKg) {
+  const slabCharge = (kg) => {
+    if (kg <= 0) return 0;
+    if (kg <= 2) return 80;
+    if (kg <= 5) return 150;
+    if (kg <= 7) return 230;
+    if (kg <= 8) return 300;
+    return 380; // 9–12 kg
+  };
+
+  const roundedKg = Math.ceil(totalWeightKg);
+  const full12KgBlocks = Math.floor(roundedKg / 12);
+  const remainderKg = roundedKg % 12;
+
+  return (full12KgBlocks * 380) + slabCharge(remainderKg);
 }
 
 // ── Product image lookup (mirrors Cart.jsx) ───────────────────────────────────
@@ -169,10 +199,11 @@ export default function Checkout() {
 
   if (cartLoading) return <PageSpinner />;
 
-  const subtotal     = totalPrice;
-  const shippingCost = calcShipping(subtotal);
-  const grandTotal   = subtotal + shippingCost;
-  const totalQty     = cartItems.reduce((s, i) => s + i.quantity, 0);
+  const subtotal      = totalPrice;
+  const totalWeightKg = cartTotalWeightKg(cartItems);
+  const shippingCost  = calcShippingByWeight(totalWeightKg);
+  const grandTotal    = subtotal + shippingCost;
+  const totalQty      = cartItems.reduce((s, i) => s + i.quantity, 0);
 
   async function handleProceedToPayment(e) {
     e.preventDefault();
@@ -667,28 +698,21 @@ export default function Checkout() {
 
               <div style={{
                 display: "flex", justifyContent: "space-between",
-                marginBottom: shippingCost > 0 ? 4 : 12,
+                marginBottom: 4,
                 fontSize: "0.93rem", color: "#555",
               }}>
                 <span>Shipping</span>
-                <span style={{
-                  color: shippingCost === 0 ? "#2e7d32" : undefined,
-                  fontWeight: shippingCost === 0 ? 700 : 400,
-                }}>
-                  {shippingCost === 0
-                    ? "FREE"
-                    : `₹ ${shippingCost.toLocaleString("en-IN")}`}
+                <span>
+                  ₹ {shippingCost.toLocaleString("en-IN")}
                 </span>
               </div>
 
-              {shippingCost > 0 && (
-                <div style={{
-                  fontSize: "0.76rem", color: "#aaa",
-                  textAlign: "right", marginBottom: 12,
-                }}>
-                  Free shipping on orders ≥ ₹ {SHIPPING_THRESHOLD.toLocaleString("en-IN")}
-                </div>
-              )}
+              <div style={{
+                fontSize: "0.76rem", color: "#aaa",
+                textAlign: "right", marginBottom: 12,
+              }}>
+                Weight slab applied ({totalWeightKg.toFixed(2)} kg)
+              </div>
 
               <div style={{
                 borderTop: "2px solid #e0f2f1",

@@ -44,6 +44,8 @@ function FooterContact() {
                                     <li><a href="/whyus" style={quickLinkStyle}>Why Us?</a></li>
                                     <li><a href="/aboutus" style={quickLinkStyle}>About Us</a></li>
                                     <li><a href="/contact" style={quickLinkStyle}>Contact</a></li>
+                                    <li><a href="/cart" style={quickLinkStyle}>Cart</a></li>
+                                    <li><a href="/order-history" style={quickLinkStyle}>Orders</a></li>
                                 </Col>
                             </Row>
                         </Container>

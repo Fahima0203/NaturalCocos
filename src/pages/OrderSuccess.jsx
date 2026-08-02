@@ -1,9 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 export default function OrderSuccess() {
   const { state } = useLocation();
   const navigate  = useNavigate();
+  const [copied, setCopied] = useState(false);
 
   // Guard: redirect home if page is accessed directly without order state
   useEffect(() => {
@@ -15,6 +17,16 @@ export default function OrderSuccess() {
   if (!state?.orderId) return null;
 
   const { orderId, email } = state;
+
+  async function handleCopyOrderId() {
+    try {
+      await navigator.clipboard.writeText(`#${orderId}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   return (
     <div style={{
@@ -89,15 +101,44 @@ export default function OrderSuccess() {
             <div style={{ fontSize: "0.82rem", color: "#888", marginBottom: 2 }}>
               Order Number
             </div>
-            <div style={{
-              fontWeight: 800,
-              fontSize: "0.97rem",
-              color: "#00695c",
-              wordBreak: "break-all",
-              letterSpacing: "0.02em",
-            }}>
-              #{orderId}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{
+                fontWeight: 800,
+                fontSize: "0.97rem",
+                color: "#00695c",
+                wordBreak: "break-all",
+                letterSpacing: "0.02em",
+              }}>
+                #{orderId}
+              </div>
+              <button
+                type="button"
+                onClick={handleCopyOrderId}
+                aria-label="Copy order number"
+                title="Copy order number"
+                style={{
+                  border: "0px solid #b2dfdb",
+                  background: copied ? "#e8f5e9" : "rgb(245 250 245)",
+                  color: "#00695c",
+                  borderRadius: 6,
+                  width: 30,
+                  height: 23,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "0.95rem",
+                  lineHeight: 1,
+                }}
+              >
+                {copied ? "✓" : <ContentCopyIcon style={{ fontSize: 16 }} />}
+              </button>
             </div>
+            {copied && (
+              <div style={{ fontSize: "0.78rem", color: "#2e7d32", marginTop: 6 }}>
+                Order number copied
+              </div>
+            )}
           </div>
           {email && (
             <div>
