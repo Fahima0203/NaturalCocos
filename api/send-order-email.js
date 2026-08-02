@@ -9,6 +9,8 @@
 //   GMAIL_PASS   — Gmail App Password (16-char, no spaces)
 
 const nodemailer = require('nodemailer');
+const { applyCors } = require('./_cors');
+const { escapeHtml } = require('./_escapeHtml');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -17,13 +19,13 @@ function fmt(n) {
 }
 
 function addressBlock(a) {
-  const lines = [a.fullName];
-  if (a.company) lines.push(a.company);
-  lines.push(a.address1);
-  if (a.address2) lines.push(a.address2);
-  lines.push(`${a.city} – ${a.postalCode}`);
-  lines.push(`${a.state}, ${a.country}`);
-  if (a.phone) lines.push(`📞 ${a.phone}`);
+  const lines = [escapeHtml(a.fullName)];
+  if (a.company) lines.push(escapeHtml(a.company));
+  lines.push(escapeHtml(a.address1));
+  if (a.address2) lines.push(escapeHtml(a.address2));
+  lines.push(`${escapeHtml(a.city)} – ${escapeHtml(a.postalCode)}`);
+  lines.push(`${escapeHtml(a.state)}, ${escapeHtml(a.country)}`);
+  if (a.phone) lines.push(`📞 ${escapeHtml(a.phone)}`);
   return lines.join('<br>');
 }
 
@@ -32,8 +34,8 @@ function itemsTable(items) {
     .map(
       (it) => `
       <tr>
-        <td style="padding:10px 12px;border-bottom:1px solid #e8f5e9;color:#333;">${it.section} — ${it.name}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e8f5e9;text-align:center;color:#555;">${it.quantity}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #e8f5e9;color:#333;">${escapeHtml(it.section)} — ${escapeHtml(it.name)}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #e8f5e9;text-align:center;color:#555;">${Number(it.quantity) || 0}</td>
         <td style="padding:10px 12px;border-bottom:1px solid #e8f5e9;text-align:right;color:#333;">${fmt(it.priceValue)}/unit</td>
         <td style="padding:10px 12px;border-bottom:1px solid #e8f5e9;text-align:right;font-weight:600;color:#00695c;">${fmt(it.itemSubtotal)}</td>
       </tr>`
@@ -99,6 +101,11 @@ const FOOTER = `
 function buildCustomerEmail({ orderId, userEmail, items, shippingAddress,
                                subtotal, shippingCost, totalAmount,
                                razorpayOrderId, razorpayPaymentId, createdAt }) {
+  orderId           = escapeHtml(orderId);
+  userEmail         = escapeHtml(userEmail);
+  razorpayOrderId   = escapeHtml(razorpayOrderId);
+  razorpayPaymentId = escapeHtml(razorpayPaymentId);
+
   const dateStr = createdAt
     ? new Date(createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
     : new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
@@ -116,7 +123,7 @@ function buildCustomerEmail({ orderId, userEmail, items, shippingAddress,
 
       <h2 style="color:#00695c;margin:0 0 4px;font-size:1.35rem;">Order Confirmed ✅</h2>
       <p style="color:#555;margin:0 0 24px;font-size:0.95rem;">
-        Thank you for your order, <strong>${shippingAddress.fullName}</strong>!
+        Thank you for your order, <strong>${escapeHtml(shippingAddress.fullName)}</strong>!
         We have received it and will process it shortly.
       </p>
 
@@ -187,6 +194,11 @@ function buildCustomerEmail({ orderId, userEmail, items, shippingAddress,
 function buildBusinessEmail({ orderId, userEmail, items, shippingAddress,
                                subtotal, shippingCost, totalAmount,
                                razorpayOrderId, razorpayPaymentId, createdAt }) {
+  orderId           = escapeHtml(orderId);
+  userEmail         = escapeHtml(userEmail);
+  razorpayOrderId   = escapeHtml(razorpayOrderId);
+  razorpayPaymentId = escapeHtml(razorpayPaymentId);
+
   const dateStr = createdAt
     ? new Date(createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
     : new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
@@ -261,7 +273,7 @@ function buildBusinessEmail({ orderId, userEmail, items, shippingAddress,
 
   return {
     to:      process.env.GMAIL_USER,
-    subject: `New Order #${orderId} — ${fmt(totalAmount)} | ${shippingAddress.fullName}`,
+    subject: `New Order #${orderId} — ${fmt(totalAmount)} | ${String(shippingAddress.fullName || '').replace(/[\r\n]+/g, ' ')}`,
     html,
   };
 }
@@ -269,6 +281,12 @@ function buildBusinessEmail({ orderId, userEmail, items, shippingAddress,
 function buildPaymentAlertEmail({ orderId, userEmail, shippingAddress,
                                    totalAmount, errorDescription,
                                    razorpayOrderId, razorpayPaymentId }) {
+  orderId           = escapeHtml(orderId);
+  userEmail         = escapeHtml(userEmail);
+  razorpayOrderId   = escapeHtml(razorpayOrderId);
+  razorpayPaymentId = escapeHtml(razorpayPaymentId);
+  errorDescription  = escapeHtml(errorDescription);
+
   const dateStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
   const html = `
@@ -339,7 +357,7 @@ function buildPaymentAlertEmail({ orderId, userEmail, shippingAddress,
       <p style="color:#555;font-size:0.9rem;">
         Please check the Razorpay dashboard and contact the customer at
         <a href="mailto:${userEmail}" style="color:#e65100;">${userEmail}</a>
-        ${shippingAddress?.phone ? `or call <strong>${shippingAddress.phone}</strong>` : ''}.
+        ${shippingAddress?.phone ? `or call <strong>${escapeHtml(shippingAddress.phone)}</strong>` : ''}.
       </p>
     </div>
 
@@ -361,10 +379,7 @@ function buildPaymentAlertEmail({ orderId, userEmail, shippingAddress,
 // ── Handler ───────────────────────────────────────────────────────────────────
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (applyCors(req, res)) return;
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed.' });
 
   const gmailUser = process.env.GMAIL_USER;

@@ -7,6 +7,8 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import QuantitySelector from "../components/QuantitySelector";
+import RecentlyViewed, { recordRecentlyViewed } from "../components/RecentlyViewed";
+import FAQ from "../components/FAQ";
 
 const ProductDetails = () => {
     const { section: sectionParam, product: productParam } = useParams();
@@ -93,6 +95,13 @@ const ProductDetails = () => {
     const [qty, setQty] = useState(1);
     // ────────────────────────────────────────────────────────────────────────
 
+    // Track this product for the "Recently Viewed" strip (localStorage only)
+    useEffect(() => {
+        if (section?.title && product?.name) {
+            recordRecentlyViewed(section.title, product.name);
+        }
+    }, [section?.title, product?.name]);
+
     if (!section || !product) {
         return <div style={{ padding: 40 }}>Product not found.</div>;
     }
@@ -111,6 +120,8 @@ const ProductDetails = () => {
     const whatsappNumber = "9445676371";
     const whatsappMsg = `Hi, I'm interested in ${product.name} (${section.title})`;
     const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMsg)}`;
+    const quotationMsg = `Hi, I'd like a bulk quotation for ${product.name} (${section.title}). Please share pricing and MOQ details.`;
+    const quotationLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(quotationMsg)}`;
 
     const coirYarnVariants = {
         "2 Ply 7 mm": [
@@ -370,8 +381,15 @@ const ProductDetails = () => {
                     {fromHome ? (
                         /* ── Home flow: actual price + qty selector + Add to Cart + Buy Now ── */
                         <>
-                            <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#00695c", marginBottom: 10 }}>
+                            <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#00695c", marginBottom: 6 }}>
                                 {price}
+                            </div>
+                            <div style={{
+                                display: "inline-flex", alignItems: "center", gap: 6,
+                                color: "#2e7d32", fontWeight: 700, fontSize: "0.85rem",
+                                marginBottom: 10,
+                            }}>
+                                ✅ In Stock
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                                 <span style={{ fontSize: "0.95rem", color: "#555", fontWeight: 600 }}>Qty:</span>
@@ -423,6 +441,18 @@ const ProductDetails = () => {
                                     {cartBusy ? "Please wait…" : "⚡ Buy Now"}
                                 </button>
                             </div>
+                            <a
+                                href={quotationLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                    color: "#00695c", fontWeight: 600, fontSize: "0.88rem",
+                                    textDecoration: "underline", display: "inline-block", marginBottom: 18,
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Need bulk pricing? Request a Quotation →
+                            </a>
                         </>
                     ) : (
                         /* ── Default flow: Get Latest Price button + MOQ ── */
@@ -453,6 +483,13 @@ const ProductDetails = () => {
                                 >
                                     Get Latest Price
                                 </a>
+                            </div>
+                            <div style={{
+                                display: "inline-flex", alignItems: "center", gap: 6,
+                                color: "#2e7d32", fontWeight: 700, fontSize: "0.85rem",
+                                marginBottom: 10,
+                            }}>
+                                ✅ In Stock
                             </div>
                             <div style={{
                                 fontSize: "1.09rem",
@@ -726,6 +763,8 @@ const ProductDetails = () => {
                     )}
                 </div>
             </div>
+            <RecentlyViewed excludeSection={section.title} excludeName={product.name} />
+            <FAQ />
             <FooterContact />
             <style>
                 {`

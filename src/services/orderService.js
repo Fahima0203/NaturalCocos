@@ -5,11 +5,19 @@ import {
   doc,
   writeBatch,
   serverTimestamp,
+  query,
+  where,
+  getDocs,
+  limit,
 } from 'firebase/firestore';
 
 /**
  * Creates a new order document in the top-level `orders` collection.
  * Returns the auto-generated Firestore document ID (order number).
+ *
+ * Idempotent on razorpayPaymentId: if an order already exists for the same
+ * payment (e.g. duplicate handler invocation or network retry), the existing
+ * order ID is returned instead of creating a duplicate.
  *
  * Firestore Security Rule needed:
  *   match /orders/{orderId} {
@@ -18,6 +26,17 @@ import {
  *   }
  */
 export async function createOrder(uid, orderData) {
+  if (orderData?.razorpayPaymentId) {
+    const existing = await getDocs(
+      query(
+        collection(db, 'orders'),
+        where('razorpayPaymentId', '==', orderData.razorpayPaymentId),
+        limit(1)
+      )
+    );
+    if (!existing.empty) return existing.docs[0].id;
+  }
+
   const ref = await addDoc(collection(db, 'orders'), {
     userId:    uid,
     ...orderData,
