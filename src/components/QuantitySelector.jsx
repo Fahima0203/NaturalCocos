@@ -1,4 +1,5 @@
 import React from "react";
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
 /**
  * Reusable quantity selector (− / count / +).
@@ -15,21 +16,27 @@ export default function QuantitySelector({
   quantity,
   onDecrease,
   onIncrease,
+  onRemove, // optional: called when trash is shown and clicked
   decreaseDisabled = false,
   size = "md",
 }) {
   const btnSize = size === "sm" ? 28 : 32;
   const fontSize = size === "sm" ? "1rem" : "1.1rem";
   const countFontSize = size === "sm" ? "0.97rem" : "1.05rem";
+  const showTrash = Number(quantity) === 1;
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
       <button
-        onClick={onDecrease}
-        disabled={decreaseDisabled}
-        style={btnStyle({ disabled: decreaseDisabled, size: btnSize, fontSize })}
+        onClick={showTrash ? onRemove : onDecrease}
+        disabled={showTrash ? !onRemove : decreaseDisabled}
+        title={showTrash ? (onRemove ? "Remove item" : "Remove (not available)") : "Decrease"}
+        style={{
+          ...btnStyle({ disabled: showTrash ? !onRemove : decreaseDisabled, size: btnSize, fontSize }),
+          color: showTrash && onRemove ? "#e53935" : undefined,
+        }}
       >
-        −
+        {showTrash ? <DeleteOutlineIcon style={{ fontSize: 20 }}/> : "−"}
       </button>
 
       <span

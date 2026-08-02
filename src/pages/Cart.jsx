@@ -141,6 +141,7 @@ export default function Cart() {
                       quantity={item.quantity}
                       onDecrease={() => updateQuantity(item.id, item.quantity - 1)}
                       onIncrease={() => updateQuantity(item.id, item.quantity + 1)}
+                      onRemove={() => removeFromCart(item.id)}
                       decreaseDisabled={false}
                     />
 
