@@ -1,24 +1,44 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
 import Analytics from "./pages/Analytics";
 import Navbar from './components/Navbar';
-import Home from './pages/Home';
-import Products from './pages/Products';
-import ProductDetails from "./pages/ProductDetails";
-import About from './pages/About';
-import Info from './pages/Info';
-import Contact from './pages/Contact';
 import WhatsappCall from './components/WatsappCall';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
-import Payment from './pages/Payment';
-import OrderHistory from './pages/OrderHistory';
-import OrderSuccess from './pages/OrderSuccess';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 // import { useEffect } from "react";
+
+// Route-level code splitting — each page loads its own chunk on demand
+// instead of bloating the initial bundle.
+const Home          = lazy(() => import('./pages/Home'));
+const Products      = lazy(() => import('./pages/Products'));
+const ProductDetails = lazy(() => import('./pages/ProductDetails'));
+const About         = lazy(() => import('./pages/About'));
+const Info          = lazy(() => import('./pages/Info'));
+const Contact       = lazy(() => import('./pages/Contact'));
+const Login         = lazy(() => import('./pages/Login'));
+const Signup        = lazy(() => import('./pages/Signup'));
+const Cart          = lazy(() => import('./pages/Cart'));
+const Checkout      = lazy(() => import('./pages/Checkout'));
+const Payment       = lazy(() => import('./pages/Payment'));
+const OrderHistory  = lazy(() => import('./pages/OrderHistory'));
+const OrderSuccess  = lazy(() => import('./pages/OrderSuccess'));
+const OrderFailed   = lazy(() => import('./pages/OrderFailed'));
+
+function RouteFallback() {
+  return (
+    <div style={{ display: "flex", justifyContent: "center", padding: "5rem 0" }}>
+      <div style={{
+        width: 44, height: 44,
+        border: "5px solid #e0f2f1",
+        borderTop: "5px solid #009688",
+        borderRadius: "50%",
+        animation: "spin 0.8s linear infinite",
+      }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
 
 function App() {
   // useEffect(() => {
@@ -39,6 +59,7 @@ function App() {
         <CartProvider>
           <Analytics />
           <Navbar />
+          <Suspense fallback={<RouteFallback />}>
           <Routes>
           {/* Public routes */}
           <Route path="/" element={<Home />} />
@@ -56,7 +77,9 @@ function App() {
           <Route path="/payment" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
           <Route path="/order-history" element={<ProtectedRoute><OrderHistory /></ProtectedRoute>} />
           <Route path="/order-success" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
+          <Route path="/order-failed" element={<ProtectedRoute><OrderFailed /></ProtectedRoute>} />
         </Routes>
+          </Suspense>
           <WhatsappCall message="Hi, I would like to order a custom product!" />
         </CartProvider>
       </AuthProvider>

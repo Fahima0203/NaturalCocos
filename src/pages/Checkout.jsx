@@ -4,44 +4,8 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { productSections } from "../data/productSections";
 import { createOrder, clearUserCart } from "../services/orderService";
-
-// ── Shipping cost (weight slabs) ─────────────────────────────────────────────
-function itemUnitWeightKg(item) {
-  const source = `${item?.name || ""} ${item?.id || ""}`;
-  const kgMatch = source.match(/(\d+(?:\.\d+)?)\s*kg\b/i);
-  if (kgMatch) return Number(kgMatch[1]);
-
-  const gMatch = source.match(/(\d+(?:\.\d+)?)\s*g\b/i);
-  if (gMatch) return Number(gMatch[1]) / 1000;
-
-  return 0;
-}
-
-function cartTotalWeightKg(items) {
-  const total = (items || []).reduce((sum, item) => {
-    const unitKg = itemUnitWeightKg(item);
-    return sum + unitKg * (item.quantity || 0);
-  }, 0);
-
-  return Number(total.toFixed(3));
-}
-
-function calcShippingByWeight(totalWeightKg) {
-  const slabCharge = (kg) => {
-    if (kg <= 0) return 0;
-    if (kg <= 2) return 80;
-    if (kg <= 5) return 150;
-    if (kg <= 7) return 230;
-    if (kg <= 8) return 300;
-    return 380; // 9–12 kg
-  };
-
-  const roundedKg = Math.ceil(totalWeightKg);
-  const full12KgBlocks = Math.floor(roundedKg / 12);
-  const remainderKg = roundedKg % 12;
-
-  return (full12KgBlocks * 380) + slabCharge(remainderKg);
-}
+import { ORDER_STATUS, PAYMENT_STATUS } from "../data/orderStatus";
+import { cartTotalWeightKg, calcShippingByWeight } from "../utils/shipping";
 
 // ── Product image lookup (mirrors Cart.jsx) ───────────────────────────────────
 function getProductImage(section, name) {
@@ -106,15 +70,15 @@ function inputSx(hasError, extra = {}) {
   };
 }
 
-// ── Form validation ───────────────────────────────────────────────────────────
+// ── Form validation (India-specific) ─────────────────────────────────────────
 function validate(f) {
   const e = {};
   if (!f.fullName.trim())
     e.fullName = "Full name is required.";
   if (!f.phone.trim())
     e.phone = "Phone number is required.";
-  else if (!/^\+?[\d\s\-()]{7,20}$/.test(f.phone.trim()))
-    e.phone = "Enter a valid phone number.";
+  else if (!/^(\+91[-\s]?)?[6-9]\d{9}$/.test(f.phone.trim().replace(/\s+/g, "")))
+    e.phone = "Enter a valid 10-digit Indian mobile number.";
   if (!f.address1.trim())
     e.address1 = "Address line 1 is required.";
   if (!f.city.trim())
@@ -125,7 +89,9 @@ function validate(f) {
     e.country = "Country is required.";
   if (!f.postalCode.trim())
     e.postalCode = "Postal code is required.";
-  else if (!/^\w{3,10}$/.test(f.postalCode.trim()))
+  else if (f.country.trim().toLowerCase() === "india" && !/^[1-9]\d{5}$/.test(f.postalCode.trim()))
+    e.postalCode = "Enter a valid 6-digit Indian PIN code.";
+  else if (!/^[\w\- ]{3,10}$/.test(f.postalCode.trim()))
     e.postalCode = "Enter a valid postal code (3–10 characters).";
   return e;
 }
@@ -310,8 +276,8 @@ export default function Checkout() {
             subtotal,
             shippingCost,
             totalAmount:       grandTotal,
-            orderStatus:       "Confirmed",
-            paymentStatus:     "Paid",
+            orderStatus:       ORDER_STATUS.CONFIRMED,
+            paymentStatus:     PAYMENT_STATUS.PAID,
             razorpayOrderId:   response.razorpay_order_id,
             razorpayPaymentId: response.razorpay_payment_id,
           });
@@ -370,7 +336,6 @@ export default function Checkout() {
     const rzp = new window.Razorpay(options);
     rzp.on("payment.failed", function (response) {
       const desc = response.error?.description || "Payment failed";
-      setPlaceError(`Payment failed: ${desc}`);
       setPlacing(false);
 
       // Alert business about the payment issue
@@ -388,6 +353,10 @@ export default function Checkout() {
           errorDescription:  desc,
         }),
       }).catch((e) => console.warn("Payment alert email failed:", e));
+
+      navigate("/order-failed", {
+        state: { reason: desc, amount: grandTotal },
+      });
     });
     rzp.open();
     // placing remains true while popup is active — reset in handler, ondismiss, or payment.failed
@@ -451,7 +420,7 @@ export default function Checkout() {
                 <div style={{ flex: "1 1 200px" }}>
                   <Field label="Full Name" required error={errors.fullName}>
                     <input
-                      name="fullName" type="text"
+                      name="fullName" type="text" autoComplete="name"
                       value={form.fullName} onChange={handleChange}
                       placeholder="Jane Smith"
                       style={inputSx(!!errors.fullName)}
@@ -464,7 +433,7 @@ export default function Checkout() {
                 <div style={{ flex: "1 1 160px" }}>
                   <Field label="Phone Number" required error={errors.phone}>
                     <input
-                      name="phone" type="tel"
+                      name="phone" type="tel" autoComplete="tel"
                       value={form.phone} onChange={handleChange}
                       placeholder="+91 98765 43210"
                       style={inputSx(!!errors.phone)}
@@ -491,7 +460,7 @@ export default function Checkout() {
               {/* Address line 1 */}
               <Field label="Address Line 1" required error={errors.address1}>
                 <input
-                  name="address1" type="text"
+                  name="address1" type="text" autoComplete="address-line1"
                   value={form.address1} onChange={handleChange}
                   placeholder="Street address, P.O. box"
                   style={inputSx(!!errors.address1)}
@@ -504,7 +473,7 @@ export default function Checkout() {
               {/* Address line 2 (optional) */}
               <Field label="Address Line 2">
                 <input
-                  name="address2" type="text"
+                  name="address2" type="text" autoComplete="address-line2"
                   value={form.address2} onChange={handleChange}
                   placeholder="Apartment, suite, building (optional)"
                   style={inputSx(false)}
@@ -518,7 +487,7 @@ export default function Checkout() {
                 <div style={{ flex: "1 1 180px" }}>
                   <Field label="City" required error={errors.city}>
                     <input
-                      name="city" type="text"
+                      name="city" type="text" autoComplete="address-level2"
                       value={form.city} onChange={handleChange}
                       placeholder="Chennai"
                       style={inputSx(!!errors.city)}
@@ -531,7 +500,7 @@ export default function Checkout() {
                 <div style={{ flex: "1 1 180px" }}>
                   <Field label="State / Province" required error={errors.state}>
                     <input
-                      name="state" type="text"
+                      name="state" type="text" autoComplete="address-level1"
                       value={form.state} onChange={handleChange}
                       placeholder="Tamil Nadu"
                       style={inputSx(!!errors.state)}
@@ -548,7 +517,7 @@ export default function Checkout() {
                 <div style={{ flex: "1 1 200px" }}>
                   <Field label="Country" required error={errors.country}>
                     <input
-                      name="country" type="text"
+                      name="country" type="text" autoComplete="country-name"
                       value={form.country} onChange={handleChange}
                       placeholder="India"
                       style={inputSx(!!errors.country)}
@@ -561,7 +530,7 @@ export default function Checkout() {
                 <div style={{ flex: "1 1 140px" }}>
                   <Field label="Postal Code" required error={errors.postalCode}>
                     <input
-                      name="postalCode" type="text"
+                      name="postalCode" type="text" autoComplete="postal-code"
                       value={form.postalCode} onChange={handleChange}
                       placeholder="600001"
                       style={inputSx(!!errors.postalCode)}
@@ -620,6 +589,25 @@ export default function Checkout() {
             <p style={{ textAlign: "center", marginTop: "0.8rem", fontSize: "0.82rem", color: "#aaa" }}>
               By placing your order you agree to our terms and conditions.
             </p>
+
+            {/* Trust indicators — shown right next to the payment action */}
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              gap: "1.2rem", flexWrap: "wrap",
+              marginTop: "1rem", padding: "0.7rem 1rem",
+              background: "#f5faf5", borderRadius: 8,
+              border: "1px solid #e0f2f1",
+            }}>
+              <span style={{ fontSize: "0.82rem", color: "#00695c", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                🔒 Secure Checkout
+              </span>
+              <span style={{ fontSize: "0.82rem", color: "#555", display: "flex", alignItems: "center", gap: 6 }}>
+                ✅ 100% Safe Payments
+              </span>
+              <span style={{ fontSize: "0.82rem", color: "#555", display: "flex", alignItems: "center", gap: 6 }}>
+                ⚡ Powered by Razorpay
+              </span>
+            </div>
           </div>
 
           {/* ══════════ RIGHT: Order summary ══════════ */}
@@ -657,7 +645,7 @@ export default function Checkout() {
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
                       {img
-                        ? <img src={img} alt={item.name}
+                        ? <img src={img} alt={item.name} loading="lazy"
                             style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                         : <span style={{ fontSize: "1.5rem" }}>📦</span>
                       }

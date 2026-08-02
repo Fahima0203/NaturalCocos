@@ -16,13 +16,13 @@ function FooterContact() {
             <div className="container">
                 <div className="row row-40 row-md-50 justify-content-xl-between">
                     <div className="col-sm-6 col-lg-4 wow fadeInRight" style={{ padding: '10px' }}>
-                        <h2>Visit Us</h2>
+                        <h4>Visit Us</h4>
                         <p style={quickLinkStyle}> 
                             <a target="_blank" rel="noreferrer" href="https://www.google.com/maps/place/NATURAL+COCOS/@11.6702021,78.0800378,17z/data=!3m1!4b1!4m6!3m5!1s0x3babfb00342cac0f:0x4315726befb96990!8m2!3d11.6702021!4d78.0800378!16s%2Fg%2F11xwbjf_34?entry=ttu&g_ep=EgoyMDI1MTIwOS4wIKXMDSoASAFQAw%3D%3D">
                             {/* <LocationOn /> 33/1,2,3, Dharmanagar 3rd Street,<br /> Suramangalam, Salem-636005, <br />Tamil Nadu, India</a></p> */}
                             <LocationOn /> 4, Steel Plant Road,<br /> Talaopatti, Salem, <br />Tamil Nadu-636302, India</a></p>
                         <div style={{ marginTop: '10px' }}>
-                            <h4>Business Hours</h4>
+                            <h6>Business Hours</h6>
                             <ul style={{ listStyle: 'none', paddingLeft: 0, marginBottom: 0 }}>
                                 <li><AccessTime /> Open 24/7 – We're always available!</li>
                                 <li>Monday - Sunday: 24 Hours</li>
@@ -30,7 +30,7 @@ function FooterContact() {
                         </div>
                     </div>
                     <div className="col-sm-6 col-lg-4" style={{ padding: '10px' }}>
-                        <h2>Quick links</h2>
+                        <h4>Quick links</h4>
                         <Container>
                             <Row>
                                 <Col>
@@ -51,7 +51,7 @@ function FooterContact() {
                         </Container>
                     </div>
                     <div className="col-lg-4 wow fadeInRight" data-wow-delay=".3s" style={{ paddingTop: '10px' }}>
-                        <h2>Get in touch</h2>
+                        <h4>Get in touch</h4>
                         <p>We are always ready to answer any questions you may have or help you select healthy products.</p>
                         <p>Contact us anytime!</p>
                         <div className="gst-iec-box">

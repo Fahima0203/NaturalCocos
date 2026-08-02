@@ -178,6 +178,7 @@ const Products = () => {
                                                                     <img
                                                                         src={prod.images[0]}
                                                                         alt={prod.name}
+                                                                        loading="lazy"
                                                                         style={{
                                                                             ...styles.cardImg,
                                                                             border: "2px solid #b2dfdb",
@@ -247,6 +248,7 @@ const Products = () => {
                                                         <img
                                                             src={prod.images[0]}
                                                             alt={prod.name}
+                                                            loading="lazy"
                                                             style={{
                                                                 ...styles.cardImgMobile,
                                                                 border: "2px solid #b2dfdb"

@@ -87,9 +87,9 @@ export default function FeaturedProducts() {
   }
 
   return (
-    <section id="featured-products" style={{
+    <section id="featured-products" className="fp-section" style={{
       background: "linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%)",
-      padding: "4rem 1rem",
+      padding: "3rem 1rem",
     }}>
       <style>{`
         @keyframes fp-pop {
@@ -103,12 +103,22 @@ export default function FeaturedProducts() {
           transform: translateY(-4px);
           box-shadow: 0 10px 44px rgba(0,105,92,0.16) !important;
         }
+        @media (max-width: 600px) {
+          .fp-section { padding: 2rem 0.75rem !important; }
+          .fp-header { margin-bottom: 1.6rem !important; }
+          .fp-header h2 { font-size: 1.5rem !important; }
+          .fp-header p { font-size: 0.92rem !important; }
+          .fp-cards { gap: 1rem !important; }
+          .fp-card-body { padding: 1rem 1.1rem 1.2rem !important; gap: 8px !important; }
+          .fp-card-img { height: 160px !important; }
+          .fp-trust { gap: 1rem !important; margin-top: 1.6rem !important; }
+        }
       `}</style>
 
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
 
         {/* ── Section header ── */}
-        <div style={{ textAlign: "center", marginBottom: "2.8rem" }}>
+        <div className="fp-header" style={{ textAlign: "center", marginBottom: "2rem" }}>
           <span style={{
             display: "inline-block",
             background: "linear-gradient(90deg,#00695c,#43a047)",
@@ -145,7 +155,7 @@ export default function FeaturedProducts() {
         </div>
 
         {/* ── Product cards ── */}
-        <div style={{
+        <div className="fp-cards" style={{
           display: "flex",
           gap: "1.8rem",
           justifyContent: "center",
@@ -183,6 +193,8 @@ export default function FeaturedProducts() {
                   <img
                     src={img}
                     alt={`${name} Cocopeat Block`}
+                    loading="lazy"
+                    className="fp-card-img"
                     style={{
                       width: "100%",
                       height: 220,
@@ -207,12 +219,12 @@ export default function FeaturedProducts() {
                 </div>
 
                 {/* Card content */}
-                <div style={{
-                  padding: "1.4rem 1.5rem 1.6rem",
+                <div className="fp-card-body" style={{
+                  padding: "1.2rem 1.4rem 1.4rem",
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 10,
+                  gap: 8,
                 }}>
                   <h3 style={{
                     fontWeight: 800,
@@ -232,24 +244,32 @@ export default function FeaturedProducts() {
                     {description}
                   </p>
 
+                  {/* ── Price + quantity selector, same row ── */}
                   <div style={{
-                    fontSize: "1.08rem",
-                    fontWeight: 700,
-                    color: "#00695c",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: 10,
+                    margin: "5px 0px",
                   }}>
-                    {price}
-                  </div>
-
-                  {/* ── Quantity selector ── */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: "0.9rem", color: "#555", fontWeight: 600 }}>Qty:</span>
-                    <QuantitySelector
-                      quantity={getQty(name)}
-                      onDecrease={() => setQty(name, getQty(name) - 1)}
-                      onIncrease={() => setQty(name, getQty(name) + 1)}
-                      decreaseDisabled={getQty(name) <= 1}
-                      size="sm"
-                    />
+                    <span style={{
+                      fontSize: "1.08rem",
+                      fontWeight: 700,
+                      color: "#00695c",
+                    }}>
+                      {price}
+                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: "0.85rem", color: "#555", fontWeight: 600 }}>Qty:</span>
+                      <QuantitySelector
+                        quantity={getQty(name)}
+                        onDecrease={() => setQty(name, getQty(name) - 1)}
+                        onIncrease={() => setQty(name, getQty(name) + 1)}
+                        decreaseDisabled={getQty(name) <= 1}
+                        size="sm"
+                      />
+                    </div>
                   </div>
 
                   {/* ── Action buttons ── */}
@@ -328,12 +348,12 @@ export default function FeaturedProducts() {
         </div>
 
         {/* ── Trust badges ── */}
-        <div style={{
+        <div className="fp-trust" style={{
           display: "flex",
           justifyContent: "center",
           gap: "2rem",
           flexWrap: "wrap",
-          marginTop: "2.5rem",
+          marginTop: "2rem",
         }}>
           {["🌿 Export Quality", "🚚 Fast Delivery", "✅ Secure Payment", "📞 Dedicated Support"].map(badge => (
             <span key={badge} style={{

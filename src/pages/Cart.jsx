@@ -4,12 +4,25 @@ import { useCart } from "../context/CartContext";
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { productSections } from "../data/productSections";
 import QuantitySelector from "../components/QuantitySelector";
+import { cartTotalWeightKg, calcShippingByWeight } from "../utils/shipping";
 
 // Look up the first product image from the local import map
 function getProductImage(section, name) {
   const sec  = productSections.find((s) => s.title === section);
   const prod = sec?.products?.find((p) => p.name === name);
   return prod?.images?.[0] ?? null;
+}
+
+function buildWhatsappCartMessage(cartItems, totalPrice, shippingCost) {
+  const lines = cartItems.map(
+    (item) => `• ${item.name} (${item.section}) × ${item.quantity} — ₹ ${(item.priceValue * item.quantity).toLocaleString("en-IN")}`
+  );
+  lines.push("");
+  lines.push(`Estimated Subtotal: ₹ ${totalPrice.toLocaleString("en-IN")}`);
+  lines.push(`Estimated Shipping: ₹ ${shippingCost.toLocaleString("en-IN")}`);
+  lines.push("");
+  lines.push("I'd like to place this order — please confirm availability and total.");
+  return lines.join("\n");
 }
 
 function Spinner() {
@@ -30,6 +43,10 @@ function Spinner() {
 export default function Cart() {
   const { cartItems, cartLoading, cartError, updateQuantity, removeFromCart, totalItems, totalPrice } = useCart();
   const navigate = useNavigate();
+
+  const totalWeightKg = cartTotalWeightKg(cartItems);
+  const shippingCost  = calcShippingByWeight(totalWeightKg);
+  const estimatedTotal = totalPrice + shippingCost;
 
   if (cartLoading) return <Spinner />;
 
@@ -104,7 +121,7 @@ export default function Cart() {
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
                       {img ? (
-                        <img src={img} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <img src={img} alt={item.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       ) : (
                         <span style={{ fontSize: "2rem" }}>📦</span>
                       )}
@@ -187,12 +204,25 @@ export default function Cart() {
                 paddingTop: "0.75rem",
                 display: "flex",
                 justifyContent: "space-between",
+                fontSize: "0.92rem",
+                color: "#555",
+              }}>
+                <span>Estimated Shipping ({totalWeightKg.toFixed(2)} kg)</span>
+                <span>₹ {shippingCost.toLocaleString("en-IN")}</span>
+              </div>
+
+              <div style={{
+                marginTop: "0.6rem",
+                paddingTop: "0.6rem",
+                borderTop: "1px solid #e0f2f1",
+                display: "flex",
+                justifyContent: "space-between",
                 fontWeight: 800,
                 fontSize: "1.15rem",
                 color: "#00695c",
               }}>
                 <span>Estimated Total</span>
-                <span>₹ {totalPrice.toLocaleString("en-IN")}</span>
+                <span>₹ {estimatedTotal.toLocaleString("en-IN")}</span>
               </div>
 
               <p style={{ fontSize: "0.78rem", color: "#999", marginTop: 6, marginBottom: "1.2rem" }}>
@@ -216,6 +246,29 @@ export default function Cart() {
               >
                 Proceed to Checkout →
               </button>
+
+              <a
+                href={`https://wa.me/919445676371?text=${encodeURIComponent(buildWhatsappCartMessage(cartItems, totalPrice, shippingCost))}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "block",
+                  width: "100%",
+                  boxSizing: "border-box",
+                  textAlign: "center",
+                  padding: "0.7rem",
+                  marginTop: "0.7rem",
+                  background: "#e8f5e9",
+                  color: "#25D366",
+                  fontWeight: 700,
+                  fontSize: "0.92rem",
+                  border: "1px solid #c8e6c9",
+                  borderRadius: 8,
+                  textDecoration: "none",
+                }}
+              >
+                💬 Share Cart on WhatsApp
+              </a>
 
               <Link
                 to="/#featured-products"
