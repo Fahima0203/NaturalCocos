@@ -73,7 +73,7 @@ function FooterContact() {
                                 href="/AboutUs#certifications"
                                 style={{marginLeft: 8,cursor: "pointer"}}
                             >
-                                IEC: <span>AEKPH7496H</span>
+                                IEC: <span>EGCPA9831H</span>
                             </a>
                         </div>
                     </div>
