@@ -117,7 +117,7 @@ const ProductDetails = () => {
     // Example values, you can fetch from detailsData if available
     const price = detailsData?.price || "₹ 26/kg";
     const minOrder = detailsData?.minOrder || "5000 Kg";
-    const whatsappNumber = "9445676371";
+    const whatsappNumber = "9445071614";
     const whatsappMsg = `Hi, I'm interested in ${product.name} (${section.title})`;
     const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMsg)}`;
     const quotationMsg = `Hi, I'd like a bulk quotation for ${product.name} (${section.title}). Please share pricing and MOQ details.`;

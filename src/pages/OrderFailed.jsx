@@ -80,7 +80,7 @@ export default function OrderFailed() {
             Retry Payment
           </button>
           <a
-            href="https://wa.me/919445676371?text=Hi%2C%20I%20had%20a%20payment%20issue%20while%20placing%20my%20order."
+            href="https://wa.me/919445071614?text=Hi%2C%20I%20had%20a%20payment%20issue%20while%20placing%20my%20order."
             target="_blank"
             rel="noopener noreferrer"
             style={{

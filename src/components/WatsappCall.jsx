@@ -1,6 +1,6 @@
 const WhatsappCall = ({ message }) => {
-    const whatsappNumber = '9445676371'; 
-    const phoneNumber = '+919445676371'; 
+    const whatsappNumber = '9445071614'; 
+    const phoneNumber = '+919445071614'; 
     const whatsappLink = `https://wa.me/${whatsappNumber}${message ? `?text=${encodeURIComponent(message)}` : ''}`;
     const callLink = `tel:${phoneNumber}`;
     return (
