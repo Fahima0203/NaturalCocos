@@ -249,7 +249,7 @@ export default function Cart() {
               </button>
 
               <a
-                href={`https://wa.me/919445676371?text=${encodeURIComponent(buildWhatsappCartMessage(cartItems, totalPrice, shippingCost))}`}
+                href={`https://wa.me/919445071614?text=${encodeURIComponent(buildWhatsappCartMessage(cartItems, totalPrice, shippingCost))}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
